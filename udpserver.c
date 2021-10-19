@@ -12,6 +12,19 @@
 
 #define STRING_SIZE 1024
 
+typedef struct serverHeader{
+   short int requestID;
+   short int count;
+   short int last;
+   short int sequenceNumber;
+} serverHeader_t;
+
+typedef struct packet{
+   struct serverHeader currentHeader;
+   long int dataInts[25*4];
+}packet_t;
+
+
 /* SERV_UDP_PORT is the port number on which the server listens for
    incoming messages from clients. You should change this to a different
    number to prevent conflicts with others in the class. */
