@@ -12,6 +12,11 @@
 
 #define STRING_SIZE 1024
 
+typedef struct header{
+   unsigned short int requestID;
+   unsigned short int count;
+} header_t;
+
 int main(void) {
 
    int sock_client;  /* Socket used by client */ 

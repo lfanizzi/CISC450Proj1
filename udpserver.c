@@ -13,10 +13,10 @@
 #define STRING_SIZE 1024
 
 typedef struct serverHeader{
-   short int requestID;
-   short int count;
-   short int last;
-   short int sequenceNumber;
+   unsigned short int requestID;
+   unsigned short int count;
+   unsigned short int last;
+   unsigned short int sequenceNumber;
 } serverHeader_t;
 
 typedef struct packet{
@@ -29,7 +29,7 @@ typedef struct packet{
    incoming messages from clients. You should change this to a different
    number to prevent conflicts with others in the class. */
 
-#define SERV_UDP_PORT 65100
+#define SERV_UDP_PORT 60000
 
 int main(void) {
 
