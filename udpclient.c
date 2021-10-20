@@ -11,14 +11,29 @@
 #include <unistd.h>         /* for close */
 
 #define STRING_SIZE 1024
-unsigned int response = 0;
+unsigned int packets = 0;
 unsigned long bytesR = 0;
 unsigned int sum_sequence = 0;
 unsigned long checksum = 0;
+unsigned int ID = 0;
+unsigned int count_field = 0;
+
+typedef struct serverHeader{
+   unsigned short int requestID;
+   unsigned short int count;
+   unsigned short int last;
+   unsigned short int sequenceNumber;
+} serverHeader_t;
+
 typedef struct header{
    unsigned short int requestID;
    unsigned short int count;
 } header_t;
+
+typedef struct packet{
+   struct serverHeader currentHeader;
+   long int dataInts[25*4];
+}packet_t;
 
 int main(void) {
 
@@ -103,7 +118,8 @@ int main(void) {
    memcpy((char *)&server_addr.sin_addr, server_hp->h_addr,
                                     server_hp->h_length);
    server_addr.sin_port = htons(server_port);
-unsigned char msg = 'y';
+unsigned char msg = malloc(sizeof(char));
+msg ='y';
 // Loop here
 do{
 
@@ -118,17 +134,46 @@ do{
   
    bytes_sent = sendto(sock_client, sentence, msg_len, 0,
             (struct sockaddr *) &server_addr, sizeof (server_addr));
-
+   
    /* get response from server */
   
    printf("Waiting for response from server...\n");
+   struct header current_header;
+   struct packet current_packet;
+   do{
+      
    bytes_recd = recvfrom(sock_client, modifiedSentence, STRING_SIZE, 0,
                 (struct sockaddr *) 0, (int *) 0);
+   bytes_recd = recvfrom(sock_client, &current_packet, STRING_SIZE, 0,
+                (struct sockaddr *) 0, (int *) 0);
+   bytes_recd = recvfrom(sock_client, &current_header, STRING_SIZE, 0,
+                (struct sockaddr *) 0, (int *) 0);
+
+   packets  += 1;// Add to total number of response packets
+   ID += current_packet.currentHeader.requestID;
+   sum_sequence += current_packet.currentHeader.sequenceNumber;
+   if(current_packet.currentHeader.last == 1){
+      bytesR = current_packet.dataInts[current_packet.currentHeader.count];
+   }
+   else{
+         bytesR += 25;
+      }
+   }while(current_packet.currentHeader.last != 1);
+
    printf("\nThe response from server is:\n");
    printf("%s\n\n", modifiedSentence);
-scanf("%c", &msg);
+   scanf("%c", &msg);
 }while(msg == 'y');
    /* close the socket */
 
    close (sock_client);
+
+   //After last response, all the below values are printed
+printf("The Request ID is: %d \n", ID);
+printf("The count field is: %d \n", count_field);
+printf("Total number of response packets recieved: %d \n", packets);
+printf("Total number of Bytes received: %d \n", bytesR);
+printf("Sum of sequence number fields: %d \n", sum_sequence);
+printf("Checksum: %d\n", checksum);
+
 }
