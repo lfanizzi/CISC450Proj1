@@ -11,7 +11,10 @@
 #include <unistd.h>         /* for close */
 
 #define STRING_SIZE 1024
-
+unsigned int response = 0;
+unsigned long bytesR = 0;
+unsigned int sum_sequence = 0;
+unsigned long checksum = 0;
 typedef struct header{
    unsigned short int requestID;
    unsigned short int count;
@@ -100,6 +103,10 @@ int main(void) {
    memcpy((char *)&server_addr.sin_addr, server_hp->h_addr,
                                     server_hp->h_length);
    server_addr.sin_port = htons(server_port);
+unsigned char msg = 'y';
+// Loop here
+do{
+
 
    /* user interface */
 
@@ -119,7 +126,8 @@ int main(void) {
                 (struct sockaddr *) 0, (int *) 0);
    printf("\nThe response from server is:\n");
    printf("%s\n\n", modifiedSentence);
-
+scanf("%c", &msg);
+}while(msg == 'y');
    /* close the socket */
 
    close (sock_client);
