@@ -34,7 +34,8 @@ typedef struct packet{
    struct serverHeader currentHeader;
    long int dataInts[25*4];
 }packet_t;
-
+struct header current_header;
+struct packet current_packet;
 int main(void) {
 
    int sock_client;  /* Socket used by client */ 
@@ -120,6 +121,7 @@ int main(void) {
    server_addr.sin_port = htons(server_port);
 unsigned char msg = malloc(sizeof(char));
 msg ='y';
+
 // Loop here
 do{
 
@@ -137,18 +139,18 @@ do{
    
    /* get response from server */
   
-   printf("Waiting for response from server...\n");
-   struct header current_header;
-   struct packet current_packet;
+  printf("Waiting for response from server...\n");
+   
    do{
       
    bytes_recd = recvfrom(sock_client, modifiedSentence, STRING_SIZE, 0,
                 (struct sockaddr *) 0, (int *) 0);
+   /*
    bytes_recd = recvfrom(sock_client, &current_packet, STRING_SIZE, 0,
-                (struct sockaddr *) 0, (int *) 0);
+               (struct sockaddr *) 0, (int *) 0);
    bytes_recd = recvfrom(sock_client, &current_header, STRING_SIZE, 0,
                 (struct sockaddr *) 0, (int *) 0);
-
+*/
    packets  += 1;// Add to total number of response packets
    ID += current_packet.currentHeader.requestID;
    sum_sequence += current_packet.currentHeader.sequenceNumber;
@@ -158,11 +160,14 @@ do{
    else{
          bytesR += 25;
       }
-   }while(current_packet.currentHeader.last != 1);
+     printf("HERE\n");
+   }while(0);//current_packet.currentHeader.last != 1);
 
    printf("\nThe response from server is:\n");
    printf("%s\n\n", modifiedSentence);
+   printf("Would you like to send another message? (y/n) \n\n");
    scanf("%c", &msg);
+    scanf("%c", &msg);
 }while(msg == 'y');
    /* close the socket */
 
@@ -172,8 +177,8 @@ do{
 printf("The Request ID is: %d \n", ID);
 printf("The count field is: %d \n", count_field);
 printf("Total number of response packets recieved: %d \n", packets);
-printf("Total number of Bytes received: %d \n", bytesR);
+printf("Total number of Bytes received: %lu \n", bytesR);
 printf("Sum of sequence number fields: %d \n", sum_sequence);
-printf("Checksum: %d\n", checksum);
+printf("Checksum: %lu\n", checksum);
 
 }
