@@ -1,3 +1,7 @@
+
+
+
+//NEW CODE
 /* udp_client.c */ 
 /* Programmed by Adarsh Sethi */
 /* Sept. 19, 2021 */
@@ -18,6 +22,11 @@ unsigned long checksum = 0;
 unsigned int ID = 0;
 unsigned int count_field = 0;
 
+typedef struct header{
+   unsigned short int requestID;
+   unsigned short int count;
+} header_t;
+
 typedef struct serverHeader{
    unsigned short int requestID;
    unsigned short int count;
@@ -25,17 +34,11 @@ typedef struct serverHeader{
    unsigned short int sequenceNumber;
 } serverHeader_t;
 
-typedef struct header{
-   unsigned short int requestID;
-   unsigned short int count;
-} header_t;
-
 typedef struct packet{
    struct serverHeader currentHeader;
    long int dataInts[25*4];
 }packet_t;
-struct header current_header;
-struct packet current_packet;
+
 int main(void) {
 
    int sock_client;  /* Socket used by client */ 
@@ -121,58 +124,60 @@ int main(void) {
    server_addr.sin_port = htons(server_port);
 unsigned char msg = malloc(sizeof(char));
 msg ='y';
-
-// Loop here
+   /* user interface */                                 //LOOOOOOOOOP
 do{
-
-
-   /* user interface */
-
-   printf("Please input a sentence:\n");
+   printf("Please input a number:\n");
    scanf("%s", sentence);
-   msg_len = strlen(sentence) + 1;
+   struct header *initialHeader = malloc(sizeof(header_t));
+   initialHeader->count = atoi(sentence);
+   initialHeader->requestID = 1;
+   printf("This is the value as an int: %d\n", initialHeader->count);
 
    /* send message */
+
+   struct packet newPacket;
   
-   bytes_sent = sendto(sock_client, sentence, msg_len, 0,
+   bytes_sent = sendto(sock_client, initialHeader, sizeof(*initialHeader), 0,
             (struct sockaddr *) &server_addr, sizeof (server_addr));
-   
+
    /* get response from server */
-  
-  printf("Waiting for response from server...\n");
-   
+   int i = 1;
+   int lastNumber = 0;
+   printf("Waiting for response from server...\n");
    do{
-      
-   bytes_recd = recvfrom(sock_client, modifiedSentence, STRING_SIZE, 0,
+      bytes_recd = recvfrom(sock_client, &newPacket, sizeof(packet_t), 0,
                 (struct sockaddr *) 0, (int *) 0);
-   /*
-   bytes_recd = recvfrom(sock_client, &current_packet, STRING_SIZE, 0,
-               (struct sockaddr *) 0, (int *) 0);
-   bytes_recd = recvfrom(sock_client, &current_header, STRING_SIZE, 0,
-                (struct sockaddr *) 0, (int *) 0);
-*/
+
    packets  += 1;// Add to total number of response packets
-   ID += current_packet.currentHeader.requestID;
-   sum_sequence += current_packet.currentHeader.sequenceNumber;
-   if(current_packet.currentHeader.last == 1){
-      bytesR = current_packet.dataInts[current_packet.currentHeader.count];
+   ID += newPacket.currentHeader.requestID;
+   sum_sequence += newPacket.currentHeader.sequenceNumber;
+   if(newPacket.currentHeader.last == 1){
+      bytesR = newPacket.dataInts[newPacket.currentHeader.count];
    }
    else{
          bytesR += 25;
       }
-     printf("HERE\n");
-   }while(0);//current_packet.currentHeader.last != 1);
+   }while(newPacket.currentHeader.last != 1);
 
    printf("\nThe response from server is:\n");
-   printf("%s\n\n", modifiedSentence);
+   //printf("%s\n\n", modifiedSentence);
+   printf("\nThe response from server is:\n");
+      for(int i = 0; i < atoi(sentence); i++){
+         printf("%ld \n", newPacket.dataInts[i]);
+          }
    printf("Would you like to send another message? (y/n) \n\n");
-   scanf("%c", &msg);
+    scanf("%c", &msg);
     scanf("%c", &msg);
 }while(msg == 'y');
+      
+      
+      
+      
+
+
    /* close the socket */
 
    close (sock_client);
-
    //After last response, all the below values are printed
 printf("The Request ID is: %d \n", ID);
 printf("The count field is: %d \n", count_field);
@@ -180,5 +185,11 @@ printf("Total number of response packets recieved: %d \n", packets);
 printf("Total number of Bytes received: %lu \n", bytesR);
 printf("Sum of sequence number fields: %d \n", sum_sequence);
 printf("Checksum: %lu\n", checksum);
-
 }
+/*
+printf("\nThe response from server is:\n");
+      for(int i = 0; i < atoi(sentence); i++){
+         printf("%ld \n", newPacket.dataInts[i]);
+          }
+      }while(newPacket.currentHeader.last != 1);
+   }while (1);*/

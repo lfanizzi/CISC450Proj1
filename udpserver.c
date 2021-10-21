@@ -21,9 +21,13 @@ typedef struct serverHeader{
 
 typedef struct packet{
    struct serverHeader currentHeader;
-   long int dataInts[25*4];
+   long int dataInts[sizeof(long int)*25];
 }packet_t;
 
+typedef struct header{
+   unsigned short int requestID;
+   unsigned short int count;
+} header_t;
 
 /* SERV_UDP_PORT is the port number on which the server listens for
    incoming messages from clients. You should change this to a different
@@ -44,6 +48,7 @@ int main(void) {
    unsigned int client_addr_len;  /* Length of client address structure */
 
    char sentence[STRING_SIZE];  /* receive message */
+   int number; /*received number from client*/
    char modifiedSentence[STRING_SIZE]; /* send message */
    unsigned int msg_len;  /* length of message */
    int bytes_sent, bytes_recd; /* number of bytes sent or received */
@@ -81,23 +86,35 @@ int main(void) {
                            server_port);
 
    client_addr_len = sizeof (client_addr);
+   struct header initialHeader;
 
    for (;;) {
 
-      bytes_recd = recvfrom(sock_server, &sentence, STRING_SIZE, 0,
+      bytes_recd = recvfrom(sock_server, &initialHeader, sizeof(header_t), 0,
                      (struct sockaddr *) &client_addr, &client_addr_len);
-      printf("Received Sentence is: %s\n     with length %d\n\n",
-                         sentence, bytes_recd);
+      printf("Received value is: %d\n     with length %d\n\n",
+                         initialHeader.count, bytes_recd);
 
       /* prepare the message to send */
-
       msg_len = bytes_recd;
+      /*
       for (i=0; i<msg_len; i++)
          modifiedSentence[i] = toupper (sentence[i]);
-
+      */
+     struct serverHeader newHeader;
+     struct packet *newPacket = malloc(sizeof(packet_t));
+     newHeader.requestID = initialHeader.count;
+     newHeader.sequenceNumber = 1;
+     newHeader.last = 1;
+     for(int i = 0; i < initialHeader.count || i < 25; i++){
+        newPacket->dataInts[i] = i+1;
+        newHeader.count = i;
+     }
+     newPacket->currentHeader = newHeader;
+     
       /* send message */
  
-      bytes_sent = sendto(sock_server, modifiedSentence, msg_len, 0,
+      bytes_sent = sendto(sock_server, newPacket, sizeof(packet_t), 0,
                (struct sockaddr*) &client_addr, client_addr_len);
    }
 }
